@@ -4031,6 +4031,46 @@ Galleria.prototype = {
         return this;
     },
 
+    // Update the Image container DOM element to contain newly added slides on touch devices
+    _updateImageContainer : function(self) {
+        var slidesLength = (self.getDataLength() - 1),
+            $images = self.$( 'images' ).width( slidesLength * self._stageWidth ),
+            image = new Galleria.Picture(),
+            data = self.getData(slidesLength);
+
+        $( image.container ).css({
+            position: 'absolute',
+            top: 0,
+            left: self._stageWidth*(slidesLength)
+        }).prepend( self._layers[slidesLength] = $( Utils.create('galleria-layer') ).css({
+            position: 'absolute',
+            top:0, left:0, right:0, bottom:0,
+            zIndex:2
+        })[0] ).appendTo( $images );
+
+        if( data.video ) {
+            _playIcon( image.container );
+        }
+
+        self._controls.slides.push(image);
+
+        var frame = new Galleria.Picture();
+        frame.isIframe = true;
+
+        $( frame.container ).attr('class', 'galleria-frame').css({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: 4,
+            background: '#000',
+            display: 'none'
+        }).appendTo( image.container );
+
+        self._controls.frames.push(frame);
+
+        self.finger.setup();
+    },
+
     /**
         Adds and/or removes images from the gallery
         Works just like Array.splice
@@ -4049,6 +4089,9 @@ Galleria.prototype = {
             self._parseData( function() {
                 self._createThumbnails();
             });
+            if (self._options.swipe) {
+                self._updateImageContainer(self);
+            }
         },2);
         return self;
     },
@@ -4077,44 +4120,8 @@ Galleria.prototype = {
                 self._createThumbnails( args );
             });
             if (self._options.swipe) {
-                var slidesLength = (self.getDataLength() - 1),
-                    $images = self.$( 'images' ).width( slidesLength * self._stageWidth ),
-                    image = new Galleria.Picture(),
-                    data = self.getData(slidesLength);
-
-                $( image.container ).css({
-                    position: 'absolute',
-                    top: 0,
-                    left: self._stageWidth*(slidesLength)
-                }).prepend( self._layers[slidesLength] = $( Utils.create('galleria-layer') ).css({
-                    position: 'absolute',
-                    top:0, left:0, right:0, bottom:0,
-                    zIndex:2
-                })[0] ).appendTo( $images );
-
-                if( data.video ) {
-                    _playIcon( image.container );
-                }
-
-                self._controls.slides.push(image);
-
-                var frame = new Galleria.Picture();
-                frame.isIframe = true;
-
-                $( frame.container ).attr('class', 'galleria-frame').css({
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    zIndex: 4,
-                    background: '#000',
-                    display: 'none'
-                }).appendTo( image.container );
-
-                self._controls.frames.push(frame);
-
-                self.finger.setup();
+                self._updateImageContainer(self);
             }
-
         }, 2);
         return self;
     },
